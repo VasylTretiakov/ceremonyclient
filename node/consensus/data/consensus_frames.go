@@ -60,6 +60,18 @@ func (e *DataClockConsensusEngine) syncWithMesh() error {
 		zap.Uint64("frame_number", latest.FrameNumber),
 		zap.Duration("frame_age", frametime.Since(latest)),
 	)
+	
+	for {
+		head, err := e.dataTimeReel.Head()
+		if err != nil {
+			return errors.Wrap(err, "sync")
+		}
+		if latest.FrameNumber <= head.FrameNumber {
+			break
+		}
+		e.logger.Info("synced beyond head, waiting for head to catch up")
+		time.Sleep(60 * time.Second)
+	}
 
 	return nil
 }
