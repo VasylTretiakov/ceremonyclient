@@ -14,9 +14,9 @@
 
 use super::proof_of_time::{iterate_squarings, serialize};
 use classgroup::{gmp_classgroup::GmpClassGroup, BigNum, BigNumExt, ClassGroup};
-use sha2::{digest::FixedOutput, Digest, Sha256};
-use std::{cmp::Eq, collections::HashMap, hash::Hash, mem, u64, usize};
+use sha2::{Digest, Sha256};
 use std::convert::TryInto;
+use std::{cmp::Eq, collections::HashMap, hash::Hash, mem, u64, usize};
 
 #[derive(Debug, Clone)]
 pub struct WesolowskiVDF {
@@ -114,13 +114,13 @@ fn hash_prime<T: BigNum>(seed: &[&[u8]], t: u32) -> T {
     let mut j = 0u64;
     loop {
         let mut hasher = Sha256::new();
-        hasher.input(b"prime");
-        hasher.input(u64_to_bytes(j));
+        hasher.update(b"prime");
+        hasher.update(u64_to_bytes(j));
         for i in seed {
-            hasher.input(i);
+            hasher.update(i);
         }
-        hasher.input(t.to_be_bytes());
-        let n = T::from(&hasher.fixed_result()[..16]);
+        hasher.update(t.to_be_bytes());
+        let n = T::from(&hasher.finalize()[..16]);
         if n.probab_prime(1) {
             break n;
         }
