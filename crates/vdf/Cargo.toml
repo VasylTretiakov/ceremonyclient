@@ -38,7 +38,7 @@ uniffi = { version = "0.25", features = [ "build" ] }
 
 [dev-dependencies]
 criterion = ">=0.2"
-hex = "0.3"
+hex = "0.4.3"
 
 [[bench]]
 name = "classgroup-bench"
