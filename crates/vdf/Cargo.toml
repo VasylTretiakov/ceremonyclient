@@ -30,7 +30,7 @@ name = "vdf"
 classgroup = { path = "../classgroup", version = "^0.1.0" }
 num-traits = "0.2"
 sha2 = "0.8"
-bit-vec = "0.5"
+bit-vec = "0.8.0"
 uniffi = {  version= "0.25", features = ["cli"]}
 
 [build-dependencies]
