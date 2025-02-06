@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"sync"
 
+	lru "github.com/hashicorp/golang-lru/v2"
 	"source.quilibrium.com/quilibrium/monorepo/verenc"
 	generated "source.quilibrium.com/quilibrium/monorepo/verenc/generated/verenc"
 )
@@ -124,6 +125,11 @@ func (p MPCitHVerEncProof) Verify() bool {
 	return verenc.VerencVerify(p.VerencProof)
 }
 
+type InlineEnc struct {
+	iv         []byte
+	ciphertext []byte
+}
+
 func MPCitHVerEncFromBytes(data []byte) MPCitHVerEnc {
 	ciphertext := generated.CompressedCiphertext{}
 	for i := 0; i < 3; i++ {
@@ -165,11 +171,18 @@ func (e MPCitHVerEnc) Verify(proof []byte) bool {
 
 type MPCitHVerifiableEncryptor struct {
 	parallelism int
+	lruCache    *lru.Cache[string, VerEnc]
 }
 
 func NewMPCitHVerifiableEncryptor(parallelism int) *MPCitHVerifiableEncryptor {
+	cache, err := lru.New[string, VerEnc](10000)
+	if err != nil {
+		panic(err)
+	}
+
 	return &MPCitHVerifiableEncryptor{
 		parallelism: parallelism,
+		lruCache:    cache,
 	}
 }
 
@@ -198,6 +211,45 @@ func (v *MPCitHVerifiableEncryptor) Encrypt(
 					Ctexts:         proof.Ctexts,
 					SharesRands:    proof.SharesRands,
 				},
+			}
+		}(chunk, i)
+	}
+	wg.Wait()
+	return results
+}
+
+func (v *MPCitHVerifiableEncryptor) EncryptAndCompress(
+	data []byte,
+	publicKey []byte,
+) []VerEnc {
+	chunks := verenc.ChunkDataForVerenc(data)
+	results := make([]VerEnc, len(chunks))
+	var wg sync.WaitGroup
+	throttle := make(chan struct{}, v.parallelism)
+	for i, chunk := range chunks {
+		throttle <- struct{}{}
+		wg.Add(1)
+		go func(chunk []byte, i int) {
+			defer func() { <-throttle }()
+			defer wg.Done()
+			existing, ok := v.lruCache.Get(string(publicKey) + string(chunk))
+			if ok {
+				results[i] = existing
+			} else {
+				proof := verenc.NewVerencProofEncryptOnly(chunk, publicKey)
+				result := MPCitHVerEncProof{
+					generated.VerencProof{
+						BlindingPubkey: proof.BlindingPubkey,
+						EncryptionKey:  proof.EncryptionKey,
+						Statement:      proof.Statement,
+						Challenge:      proof.Challenge,
+						Polycom:        proof.Polycom,
+						Ctexts:         proof.Ctexts,
+						SharesRands:    proof.SharesRands,
+					},
+				}
+				results[i] = result.Compress()
+				v.lruCache.Add(string(publicKey)+string(chunk), results[i])
 			}
 		}(chunk, i)
 	}

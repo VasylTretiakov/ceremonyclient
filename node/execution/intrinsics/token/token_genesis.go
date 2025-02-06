@@ -880,10 +880,13 @@ func CreateGenesisState(
 			data := []byte{}
 			data = binary.BigEndian.AppendUint64(data, 0)
 			data = append(data, coinBytes...)
-			proofs := mpcithVerEnc.Encrypt(data, config.GetGenesis().Beacon)
+			proofs := mpcithVerEnc.EncryptAndCompress(
+				data,
+				config.GetGenesis().Beacon,
+			)
 			compressed := []hypergraph.Encrypted{}
 			for _, d := range proofs {
-				compressed = append(compressed, d.Compress())
+				compressed = append(compressed, d)
 			}
 			if err := hg.AddVertex(
 				hypergraph.NewVertex(
@@ -1048,10 +1051,13 @@ func CreateGenesisState(
 			data := []byte{}
 			data = binary.BigEndian.AppendUint64(data, 0)
 			data = append(data, coinBytes...)
-			proofs := mpcithVerEnc.Encrypt(data, config.GetGenesis().Beacon)
+			proofs := mpcithVerEnc.EncryptAndCompress(
+				data,
+				config.GetGenesis().Beacon,
+			)
 			compressed := []hypergraph.Encrypted{}
 			for _, d := range proofs {
-				compressed = append(compressed, d.Compress())
+				compressed = append(compressed, d)
 			}
 			if err := hg.AddVertex(
 				hypergraph.NewVertex(

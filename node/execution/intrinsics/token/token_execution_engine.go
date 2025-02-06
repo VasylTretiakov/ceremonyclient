@@ -457,11 +457,18 @@ func (e *TokenExecutionEngine) rebuildHypergraph() {
 			"encrypting coin",
 			zap.String("address", hex.EncodeToString(key)),
 		)
-		data := e.mpcithVerEnc.Encrypt(iter.Value(), config.GetGenesis().Beacon)
+		data := e.mpcithVerEnc.EncryptAndCompress(
+			iter.Value(),
+			config.GetGenesis().Beacon,
+		)
 		compressed := []hypergraph.Encrypted{}
 		for _, d := range data {
-			compressed = append(compressed, d.Compress())
+			compressed = append(compressed, d)
 		}
+		e.logger.Debug(
+			"encrypted coin",
+			zap.String("address", hex.EncodeToString(key)),
+		)
 		if err := e.hypergraph.AddVertex(
 			hypergraph.NewVertex(
 				[32]byte(application.TOKEN_ADDRESS),
@@ -485,10 +492,13 @@ func (e *TokenExecutionEngine) rebuildHypergraph() {
 			"encrypting pre-coin proof",
 			zap.String("address", hex.EncodeToString(key)),
 		)
-		data := e.mpcithVerEnc.Encrypt(iter.Value(), config.GetGenesis().Beacon)
+		data := e.mpcithVerEnc.EncryptAndCompress(
+			iter.Value(),
+			config.GetGenesis().Beacon,
+		)
 		compressed := []hypergraph.Encrypted{}
 		for _, d := range data {
-			compressed = append(compressed, d.Compress())
+			compressed = append(compressed, d)
 		}
 		if err := e.hypergraph.AddVertex(
 			hypergraph.NewVertex(
@@ -726,10 +736,13 @@ func (e *TokenExecutionEngine) ProcessFrame(
 			data := []byte{}
 			data = binary.BigEndian.AppendUint64(data, 0)
 			data = append(data, coinBytes...)
-			proofs := e.mpcithVerEnc.Encrypt(data, config.GetGenesis().Beacon)
+			proofs := e.mpcithVerEnc.EncryptAndCompress(
+				data,
+				config.GetGenesis().Beacon,
+			)
 			compressed := []hypergraph.Encrypted{}
 			for _, d := range proofs {
-				compressed = append(compressed, d.Compress())
+				compressed = append(compressed, d)
 			}
 			if err := hg.AddVertex(
 				hypergraph.NewVertex(
@@ -764,10 +777,13 @@ func (e *TokenExecutionEngine) ProcessFrame(
 			data := []byte{}
 			data = binary.BigEndian.AppendUint64(data, 0)
 			data = append(data, coinBytes...)
-			proofs := e.mpcithVerEnc.Encrypt(data, config.GetGenesis().Beacon)
+			proofs := e.mpcithVerEnc.EncryptAndCompress(
+				data,
+				config.GetGenesis().Beacon,
+			)
 			compressed := []hypergraph.Encrypted{}
 			for _, d := range proofs {
-				compressed = append(compressed, d.Compress())
+				compressed = append(compressed, d)
 			}
 			if err := hg.RemoveVertex(
 				hypergraph.NewVertex(
@@ -803,10 +819,13 @@ func (e *TokenExecutionEngine) ProcessFrame(
 			data := []byte{}
 			data = binary.BigEndian.AppendUint64(data, 0)
 			data = append(data, proofBytes...)
-			proofs := e.mpcithVerEnc.Encrypt(data, config.GetGenesis().Beacon)
+			proofs := e.mpcithVerEnc.EncryptAndCompress(
+				data,
+				config.GetGenesis().Beacon,
+			)
 			compressed := []hypergraph.Encrypted{}
 			for _, d := range proofs {
-				compressed = append(compressed, d.Compress())
+				compressed = append(compressed, d)
 			}
 			if err := hg.AddVertex(
 				hypergraph.NewVertex(
@@ -863,10 +882,13 @@ func (e *TokenExecutionEngine) ProcessFrame(
 			data := []byte{}
 			data = binary.BigEndian.AppendUint64(data, 0)
 			data = append(data, proofBytes...)
-			proofs := e.mpcithVerEnc.Encrypt(data, config.GetGenesis().Beacon)
+			proofs := e.mpcithVerEnc.EncryptAndCompress(
+				data,
+				config.GetGenesis().Beacon,
+			)
 			compressed := []hypergraph.Encrypted{}
 			for _, d := range proofs {
-				compressed = append(compressed, d.Compress())
+				compressed = append(compressed, d)
 			}
 			if err := hg.RemoveVertex(
 				hypergraph.NewVertex(
