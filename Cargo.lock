@@ -1519,6 +1519,19 @@ dependencies = [
 
 [[package]]
 name = "sha2"
+version = "0.9.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4d58a1e1bf39749807d89cf2d98ac2dfa0ff1cb3faa38fbb64dd88ac8013d800"
+dependencies = [
+ "block-buffer 0.9.0",
+ "cfg-if",
+ "cpufeatures",
+ "digest 0.9.0",
+ "opaque-debug 0.3.1",
+]
+
+[[package]]
+name = "sha2"
 version = "0.10.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "793db75ad2bcafc3ffa7c68b215fee268f537982cd901d132f89c6343f3a3dc8"
@@ -1831,6 +1844,18 @@ dependencies = [
  "hex 0.3.2",
  "num-traits",
  "sha2 0.8.2",
+ "uniffi",
+]
+
+[[package]]
+name = "verenc"
+version = "0.1.0"
+dependencies = [
+ "ed448-goldilocks-plus",
+ "hex 0.4.3",
+ "rand",
+ "serde",
+ "sha2 0.9.9",
  "uniffi",
 ]
 

@@ -10,7 +10,6 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
-	"source.quilibrium.com/quilibrium/monorepo/node/crypto"
 	"source.quilibrium.com/quilibrium/monorepo/node/protobufs"
 )
 
@@ -31,26 +30,22 @@ type CoinStore interface {
 		frameNumber uint64,
 		address []byte,
 		coin *protobufs.Coin,
-		stateTree *crypto.VectorCommitmentTree,
 	) error
 	DeleteCoin(
 		txn Transaction,
 		address []byte,
 		coin *protobufs.Coin,
-		stateTree *crypto.VectorCommitmentTree,
 	) error
 	PutPreCoinProof(
 		txn Transaction,
 		frameNumber uint64,
 		address []byte,
 		preCoinProof *protobufs.PreCoinProof,
-		stateTree *crypto.VectorCommitmentTree,
 	) error
 	DeletePreCoinProof(
 		txn Transaction,
 		address []byte,
 		preCoinProof *protobufs.PreCoinProof,
-		stateTree *crypto.VectorCommitmentTree,
 	) error
 	GetLatestFrameProcessed() (uint64, error)
 	SetLatestFrameProcessed(txn Transaction, frameNumber uint64) error
@@ -285,7 +280,6 @@ func (p *PebbleCoinStore) PutCoin(
 	frameNumber uint64,
 	address []byte,
 	coin *protobufs.Coin,
-	stateTree *crypto.VectorCommitmentTree,
 ) error {
 	coinBytes, err := proto.Marshal(coin)
 	if err != nil {
@@ -311,10 +305,6 @@ func (p *PebbleCoinStore) PutCoin(
 		return errors.Wrap(err, "put coin")
 	}
 
-	if err = stateTree.Insert(address, data); err != nil {
-		return errors.Wrap(err, "put coin")
-	}
-
 	return nil
 }
 
@@ -322,7 +312,6 @@ func (p *PebbleCoinStore) DeleteCoin(
 	txn Transaction,
 	address []byte,
 	coin *protobufs.Coin,
-	stateTree *crypto.VectorCommitmentTree,
 ) error {
 	err := txn.Delete(coinKey(address))
 	if err != nil {
@@ -336,10 +325,6 @@ func (p *PebbleCoinStore) DeleteCoin(
 		return errors.Wrap(err, "delete coin")
 	}
 
-	if err = stateTree.Delete(address); err != nil {
-		return errors.Wrap(err, "delete coin")
-	}
-
 	return nil
 }
 
@@ -348,7 +333,6 @@ func (p *PebbleCoinStore) PutPreCoinProof(
 	frameNumber uint64,
 	address []byte,
 	preCoinProof *protobufs.PreCoinProof,
-	stateTree *crypto.VectorCommitmentTree,
 ) error {
 	proofBytes, err := proto.Marshal(preCoinProof)
 	if err != nil {
@@ -374,10 +358,6 @@ func (p *PebbleCoinStore) PutPreCoinProof(
 		return errors.Wrap(err, "put pre coin proof")
 	}
 
-	if err = stateTree.Insert(address, data); err != nil {
-		return errors.Wrap(err, "put pre coin proof")
-	}
-
 	return nil
 }
 
@@ -385,7 +365,6 @@ func (p *PebbleCoinStore) DeletePreCoinProof(
 	txn Transaction,
 	address []byte,
 	preCoinProof *protobufs.PreCoinProof,
-	stateTree *crypto.VectorCommitmentTree,
 ) error {
 	err := txn.Delete(proofKey(address))
 	if err != nil {
@@ -403,10 +382,6 @@ func (p *PebbleCoinStore) DeletePreCoinProof(
 		),
 	)
 	if err != nil {
-		return errors.Wrap(err, "delete pre coin proof")
-	}
-
-	if err = stateTree.Delete(address); err != nil {
 		return errors.Wrap(err, "delete pre coin proof")
 	}
 

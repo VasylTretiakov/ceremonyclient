@@ -20,6 +20,7 @@ members = [
     "crates/bls48581",
     "crates/ed448-rust",
     "crates/rpm",
+    "crates/verenc",
 ]
 
 [profile.release]

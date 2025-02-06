@@ -76,6 +76,10 @@ RUN ./generate.sh
 WORKDIR /opt/ceremonyclient/bls48581
 RUN ./generate.sh
 
+## Generate Rust bindings for VerEnc
+WORKDIR /opt/ceremonyclient/verenc
+RUN ./generate.sh
+
 # Build and install the node
 WORKDIR /opt/ceremonyclient/node
 

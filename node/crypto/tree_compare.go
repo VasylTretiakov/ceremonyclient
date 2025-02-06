@@ -152,8 +152,8 @@ type LeafDifference struct {
 // CompareLeaves returns all leaves that differ between the two trees
 func CompareLeaves(tree1, tree2 *VectorCommitmentTree) []LeafDifference {
 	// Get all leaves from both trees
-	leaves1 := getAllLeaves(tree1.Root)
-	leaves2 := getAllLeaves(tree2.Root)
+	leaves1 := GetAllLeaves(tree1.Root)
+	leaves2 := GetAllLeaves(tree2.Root)
 
 	differences := make([]LeafDifference, 0)
 
@@ -206,8 +206,8 @@ func CompareLeaves(tree1, tree2 *VectorCommitmentTree) []LeafDifference {
 	return differences
 }
 
-// getAllLeaves returns all leaf nodes in the tree
-func getAllLeaves(node VectorCommitmentNode) []*VectorCommitmentLeafNode {
+// GetAllLeaves returns all leaf nodes in the tree
+func GetAllLeaves(node VectorCommitmentNode) []*VectorCommitmentLeafNode {
 	if node == nil {
 		return nil
 	}
@@ -220,7 +220,7 @@ func getAllLeaves(node VectorCommitmentNode) []*VectorCommitmentLeafNode {
 	case *VectorCommitmentBranchNode:
 		for _, child := range n.Children {
 			if child != nil {
-				childLeaves := getAllLeaves(child)
+				childLeaves := GetAllLeaves(child)
 				leaves = append(leaves, childLeaves...)
 			}
 		}

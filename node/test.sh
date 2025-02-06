@@ -11,6 +11,6 @@ BINARIES_DIR="$ROOT_DIR/target/release"
 
 # Link the native VDF and execute tests
 pushd "$NODE_DIR" > /dev/null
-	CGO_LDFLAGS="-L$BINARIES_DIR -L/opt/homebrew/Cellar/mpfr/4.2.1/lib -I/opt/homebrew/Cellar/mpfr/4.2.1/include -L/opt/homebrew/Cellar/gmp/6.3.0/lib -I/opt/homebrew/Cellar/gmp/6.3.0/include -L/opt/homebrew/Cellar/flint/3.1.3-p1/lib -I/opt/homebrew/Cellar/flint/3.1.3-p1/include -lbls48581 -lstdc++ -lvdf -ldl -lm -lflint -lgmp -lmpfr" \
+	CGO_LDFLAGS="-L$BINARIES_DIR -lbls48581 -lverenc -lvdf -ldl -lm -lflint -lgmp -lmpfr" \
 	CGO_ENABLED=1 \
   go test "$@"

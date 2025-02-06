@@ -11,6 +11,8 @@ replace source.quilibrium.com/quilibrium/monorepo/bls48581 => ../bls48581
 
 replace source.quilibrium.com/quilibrium/monorepo/vdf => ../vdf
 
+replace source.quilibrium.com/quilibrium/monorepo/verenc => ../verenc
+
 replace github.com/multiformats/go-multiaddr => ../go-multiaddr
 
 replace github.com/multiformats/go-multiaddr-dns => ../go-multiaddr-dns
@@ -38,11 +40,13 @@ require (
 	source.quilibrium.com/quilibrium/monorepo/go-libp2p-blossomsub v0.0.0-00010101000000-000000000000
 	source.quilibrium.com/quilibrium/monorepo/nekryptology v0.0.0-00010101000000-000000000000
 	source.quilibrium.com/quilibrium/monorepo/vdf v0.0.0-00010101000000-000000000000
+	source.quilibrium.com/quilibrium/monorepo/verenc v0.0.0-00010101000000-000000000000
 )
 
 require (
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/deiu/gon3 v0.0.0-20230411081920-f0f8f879f597 // indirect
+	github.com/google/subcommands v1.0.1 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.1.0 // indirect
 	github.com/libp2p/go-libp2p-routing-helpers v0.7.2 // indirect
 	github.com/linkeddata/gojsonld v0.0.0-20170418210642-4f5db6791326 // indirect

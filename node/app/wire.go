@@ -58,11 +58,13 @@ var storeSet = wire.NewSet(
 	store.NewPebbleCoinStore,
 	store.NewPebbleKeyStore,
 	store.NewPebbleDataProofStore,
+	store.NewPebbleHypergraphStore,
 	store.NewPeerstoreDatastore,
 	wire.Bind(new(store.ClockStore), new(*store.PebbleClockStore)),
 	wire.Bind(new(store.CoinStore), new(*store.PebbleCoinStore)),
 	wire.Bind(new(store.KeyStore), new(*store.PebbleKeyStore)),
 	wire.Bind(new(store.DataProofStore), new(*store.PebbleDataProofStore)),
+	wire.Bind(new(store.HypergraphStore), new(*store.PebbleHypergraphStore)),
 	wire.Bind(new(store.Peerstore), new(*store.PeerstoreDatastore)),
 )
 

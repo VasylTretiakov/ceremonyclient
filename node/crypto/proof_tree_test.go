@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"fmt"
+	"math/big"
 	"testing"
 
 	"source.quilibrium.com/quilibrium/monorepo/bls48581/generated/bls48581"
@@ -17,7 +18,7 @@ func BenchmarkVectorCommitmentTreeInsert(b *testing.B) {
 		d := make([]byte, 32)
 		rand.Read(d)
 		addresses = append(addresses, d)
-		err := tree.Insert(d, d)
+		err := tree.Insert(d, d, nil, big.NewInt(1))
 		if err != nil {
 			b.Errorf("Failed to insert item %d: %v", i, err)
 		}
@@ -32,7 +33,7 @@ func BenchmarkVectorCommitmentTreeCommit(b *testing.B) {
 		d := make([]byte, 32)
 		rand.Read(d)
 		addresses = append(addresses, d)
-		err := tree.Insert(d, d)
+		err := tree.Insert(d, d, nil, big.NewInt(1))
 		if err != nil {
 			b.Errorf("Failed to insert item %d: %v", i, err)
 		}
@@ -48,7 +49,7 @@ func BenchmarkVectorCommitmentTreeProve(b *testing.B) {
 		d := make([]byte, 32)
 		rand.Read(d)
 		addresses = append(addresses, d)
-		err := tree.Insert(d, d)
+		err := tree.Insert(d, d, nil, big.NewInt(1))
 		if err != nil {
 			b.Errorf("Failed to insert item %d: %v", i, err)
 		}
@@ -64,7 +65,7 @@ func BenchmarkVectorCommitmentTreeVerify(b *testing.B) {
 		d := make([]byte, 32)
 		rand.Read(d)
 		addresses = append(addresses, d)
-		err := tree.Insert(d, d)
+		err := tree.Insert(d, d, nil, big.NewInt(1))
 		if err != nil {
 			b.Errorf("Failed to insert item %d: %v", i, err)
 		}
@@ -80,13 +81,13 @@ func TestVectorCommitmentTrees(t *testing.T) {
 	tree := &VectorCommitmentTree{}
 
 	// Test single insert
-	err := tree.Insert([]byte("key1"), []byte("value1"))
+	err := tree.Insert([]byte("key1"), []byte("value1"), nil, big.NewInt(1))
 	if err != nil {
 		t.Errorf("Failed to insert: %v", err)
 	}
 
 	// Test duplicate key
-	err = tree.Insert([]byte("key1"), []byte("value2"))
+	err = tree.Insert([]byte("key1"), []byte("value2"), nil, big.NewInt(1))
 	if err != nil {
 		t.Errorf("Failed to update existing key: %v", err)
 	}
@@ -100,7 +101,7 @@ func TestVectorCommitmentTrees(t *testing.T) {
 	}
 
 	// Test empty key
-	err = tree.Insert([]byte{}, []byte("value"))
+	err = tree.Insert([]byte{}, []byte("value"), nil, big.NewInt(1))
 	if err == nil {
 		t.Error("Expected error for empty key, got none")
 	}
@@ -114,7 +115,7 @@ func TestVectorCommitmentTrees(t *testing.T) {
 	}
 
 	// Insert and get
-	tree.Insert([]byte("key1"), []byte("value1"))
+	tree.Insert([]byte("key1"), []byte("value1"), nil, big.NewInt(1))
 	value, err = tree.Get([]byte("key1"))
 	if err != nil {
 		t.Errorf("Failed to get value: %v", err)
@@ -138,7 +139,7 @@ func TestVectorCommitmentTrees(t *testing.T) {
 	}
 
 	// Insert and delete
-	tree.Insert([]byte("key1"), []byte("value1"))
+	tree.Insert([]byte("key1"), []byte("value1"), nil, big.NewInt(1))
 	err = tree.Delete([]byte("key1"))
 	if err != nil {
 		t.Errorf("Failed to delete: %v", err)
@@ -167,7 +168,7 @@ func TestVectorCommitmentTrees(t *testing.T) {
 	}
 
 	for i, key := range keys {
-		err := tree.Insert([]byte(key), []byte("value"+string(rune('1'+i))))
+		err := tree.Insert([]byte(key), []byte("value"+string(rune('1'+i))), nil, big.NewInt(1))
 		if err != nil {
 			t.Errorf("Failed to insert key %s: %v", key, err)
 		}
@@ -220,7 +221,7 @@ func TestVectorCommitmentTrees(t *testing.T) {
 	}
 
 	// Root should change after insert
-	tree.Insert([]byte("key1"), []byte("value1"))
+	tree.Insert([]byte("key1"), []byte("value1"), nil, big.NewInt(1))
 	firstRoot := tree.Root.Commit(false)
 
 	if bytes.Equal(firstRoot, bytes.Repeat([]byte{0x00}, 64)) {
@@ -228,7 +229,7 @@ func TestVectorCommitmentTrees(t *testing.T) {
 	}
 
 	// Root should change after update
-	tree.Insert([]byte("key1"), []byte("value2"))
+	tree.Insert([]byte("key1"), []byte("value2"), nil, big.NewInt(1))
 	secondRoot := tree.Root.Commit(false)
 
 	if bytes.Equal(secondRoot, firstRoot) {
@@ -271,17 +272,21 @@ func TestVectorCommitmentTrees(t *testing.T) {
 	for i := 0; i < 10000; i++ {
 		key := addresses[i]
 		value := addresses[i]
-		err := tree.Insert(key, value)
+		err := tree.Insert(key, value, nil, big.NewInt(1))
 		if err != nil {
 			t.Errorf("Failed to insert item %d: %v", i, err)
 		}
+	}
+
+	if tree.GetSize().Cmp(big.NewInt(10000)) != 0 {
+		t.Errorf("invalid tree size: %s", tree.GetSize().String())
 	}
 
 	// Insert 10000 items in reverse
 	for i := 9999; i >= 0; i-- {
 		key := addresses[i]
 		value := addresses[i]
-		err := cmptree.Insert(key, value)
+		err := cmptree.Insert(key, value, nil, big.NewInt(1))
 		if err != nil {
 			t.Errorf("Failed to insert item %d: %v", i, err)
 		}
@@ -314,15 +319,23 @@ func TestVectorCommitmentTrees(t *testing.T) {
 		tree.Delete(key)
 	}
 
+	if tree.GetSize().Cmp(big.NewInt(5000)) != 0 {
+		t.Errorf("invalid tree size: %s", tree.GetSize().String())
+	}
+
 	// add new
 	for i := 0; i < 5000; i++ {
-		tree.Insert(newAdditions[i], newAdditions[i])
+		tree.Insert(newAdditions[i], newAdditions[i], nil, big.NewInt(1))
+	}
+
+	if tree.GetSize().Cmp(big.NewInt(10000)) != 0 {
+		t.Errorf("invalid tree size: %s", tree.GetSize().String())
 	}
 
 	cmptree = &VectorCommitmentTree{}
 
 	for i := 0; i < 10000; i++ {
-		cmptree.Insert(kept[i], kept[i])
+		cmptree.Insert(kept[i], kept[i], nil, big.NewInt(1))
 	}
 	// Verify all items
 	for i := 0; i < 10000; i++ {
@@ -355,7 +368,16 @@ func TestVectorCommitmentTrees(t *testing.T) {
 		t.Errorf("proof failed")
 	}
 
-	for _, p := range proofs {
-		fmt.Printf("%x\n", p)
+	leaves, longestBranch := tree.GetMetadata()
+
+	if leaves != 10000 {
+		t.Errorf("incorrect leaf count, %d, %d,", 10000, leaves)
 	}
+
+	// Statistical assumption, can be flaky
+	if longestBranch != 4 {
+		t.Errorf("incorrect longest branch count, %d, %d,", 4, longestBranch)
+	}
+
+	DebugNode(tree.Root, 0, "")
 }

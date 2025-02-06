@@ -1,0 +1,55 @@
+namespace verenc {
+    VerencProofAndBlindingKey new_verenc_proof(sequence<u8> data);
+    VerencProofAndBlindingKey new_verenc_proof_encrypt_only(sequence<u8> data, sequence<u8> encryption_key_bytes);
+    boolean verenc_verify(VerencProof proof);
+    CompressedCiphertext verenc_compress(VerencProof proof);
+    sequence<u8> verenc_recover(VerencDecrypt recovery);
+    sequence<sequence<u8>> chunk_data_for_verenc(sequence<u8> data);
+    sequence<u8> combine_chunked_data(sequence<sequence<u8>> chunks);
+};
+
+dictionary VerencCiphertext {
+    sequence<u8> c1;
+    sequence<u8> c2;
+    u64 i;
+};
+
+dictionary VerencShare {
+    sequence<u8> s1;
+    sequence<u8> s2;
+    u64 i;
+};
+
+dictionary VerencProofAndBlindingKey {
+    sequence<u8> blinding_key;
+    sequence<u8> blinding_pubkey;
+    sequence<u8> decryption_key;
+    sequence<u8> encryption_key;
+    sequence<u8> statement;
+    sequence<u8> challenge;
+    sequence<sequence<u8>> polycom;
+    sequence<VerencCiphertext> ctexts;
+    sequence<VerencShare> shares_rands;
+};
+
+dictionary VerencDecrypt {
+    sequence<u8> blinding_pubkey;
+    sequence<u8> decryption_key;
+    sequence<u8> statement;
+    CompressedCiphertext ciphertexts;
+};
+
+dictionary VerencProof {
+    sequence<u8> blinding_pubkey;
+    sequence<u8> encryption_key;
+    sequence<u8> statement;
+    sequence<u8> challenge;
+    sequence<sequence<u8>> polycom;
+    sequence<VerencCiphertext> ctexts;
+    sequence<VerencShare> shares_rands;
+};
+
+dictionary CompressedCiphertext {
+    sequence<VerencCiphertext> ctexts;
+    sequence<sequence<u8>> aux;
+};

@@ -1,56 +1,59 @@
 package application_test
 
 import (
+	crand "crypto/rand"
+	"fmt"
 	"math/rand"
 	"testing"
 	"time"
 
+	"github.com/cloudflare/circl/sign/ed448"
+	"source.quilibrium.com/quilibrium/monorepo/node/crypto"
 	"source.quilibrium.com/quilibrium/monorepo/node/hypergraph/application"
 )
 
 type Operation struct {
 	Type      string // "AddVertex", "RemoveVertex", "AddHyperedge", "RemoveHyperedge"
-	Vertex    *application.Vertex
-	Hyperedge *application.Hyperedge
+	Vertex    application.Vertex
+	Hyperedge application.Hyperedge
 }
 
 func TestConvergence(t *testing.T) {
-	numParties := 3
-	numOperations := 100
-
-	// Generate a set of vertices and hyperedges
-	vertices := make([]*application.Vertex, numOperations)
+	numParties := 4
+	numOperations := 100000
+	enc := crypto.NewMPCitHVerifiableEncryptor(1)
+	pub, _, _ := ed448.GenerateKey(crand.Reader)
+	enc.Encrypt(make([]byte, 20), pub)
+	vertices := make([]application.Vertex, numOperations)
 	for i := 0; i < numOperations; i++ {
-		vertices[i] = &application.Vertex{
-			AppAddress:  [32]byte{byte(i % 256)},
-			DataAddress: [32]byte{byte(i / 256)},
-		}
+		vertices[i] = application.NewVertex(
+			[32]byte{byte((i >> 8) % 256), byte((i % 256))},
+			[32]byte{byte((i >> 8) / 256), byte(i / 256)},
+			[]application.Encrypted{},
+		)
 	}
 
-	hyperedges := make([]*application.Hyperedge, numOperations/10)
+	hyperedges := make([]application.Hyperedge, numOperations/10)
 	for i := 0; i < numOperations/10; i++ {
-		hyperedges[i] = &application.Hyperedge{
-			AppAddress:  [32]byte{byte(i % 256)},
-			DataAddress: [32]byte{byte(i / 256)},
-			Extrinsics:  make(map[[64]byte]application.Atom),
-		}
-		// Add some random vertices as extrinsics
+		hyperedges[i] = application.NewHyperedge(
+			[32]byte{0, 0, byte((i >> 8) % 256), byte(i % 256)},
+			[32]byte{0, 0, byte((i >> 8) / 256), byte(i / 256)},
+		)
 		for j := 0; j < 3; j++ {
 			v := vertices[rand.Intn(len(vertices))]
-			hyperedges[i].Extrinsics[v.GetID()] = v
+			hyperedges[i].AddExtrinsic(v)
 		}
 	}
 
-	// Generate a sequence of operations
 	operations1 := make([]Operation, numOperations)
 	operations2 := make([]Operation, numOperations)
 	for i := 0; i < numOperations; i++ {
 		op := rand.Intn(2)
 		switch op {
 		case 0:
-			operations1[i] = Operation{Type: "AddVertex", Vertex: vertices[rand.Intn(len(vertices))]}
+			operations1[i] = Operation{Type: "AddVertex", Vertex: vertices[i]}
 		case 1:
-			operations1[i] = Operation{Type: "RemoveVertex", Vertex: vertices[rand.Intn(len(vertices))]}
+			operations1[i] = Operation{Type: "AddVertex", Vertex: vertices[i]}
 		}
 	}
 	for i := 0; i < numOperations; i++ {
@@ -63,13 +66,11 @@ func TestConvergence(t *testing.T) {
 		}
 	}
 
-	// Create CRDTs for each party
 	crdts := make([]*application.Hypergraph, numParties)
 	for i := 0; i < numParties; i++ {
 		crdts[i] = application.NewHypergraph()
 	}
 
-	// Apply operations in different orders for each party
 	for i := 0; i < numParties; i++ {
 		rand.Seed(time.Now().UnixNano())
 		rand.Shuffle(len(operations1), func(i, j int) { operations1[i], operations1[j] = operations1[j], operations1[i] })
@@ -94,15 +95,17 @@ func TestConvergence(t *testing.T) {
 			case "RemoveVertex":
 				crdts[i].RemoveVertex(op.Vertex)
 			case "AddHyperedge":
+				fmt.Println("add", i, op)
 				crdts[i].AddHyperedge(op.Hyperedge)
 			case "RemoveHyperedge":
+				fmt.Println("remove", i, op)
 				crdts[i].RemoveHyperedge(op.Hyperedge)
 			}
 		}
 	}
 
-	// Verify that all CRDTs have converged to the same state
-	// Additional verification: check specific vertices and hyperedges
+	crdts[0].GetSize()
+
 	for _, v := range vertices {
 		state := crdts[0].LookupVertex(v)
 		for i := 1; i < numParties; i++ {
@@ -111,12 +114,11 @@ func TestConvergence(t *testing.T) {
 			}
 		}
 	}
-
 	for _, h := range hyperedges {
 		state := crdts[0].LookupHyperedge(h)
 		for i := 1; i < numParties; i++ {
 			if crdts[i].LookupHyperedge(h) != state {
-				t.Errorf("Hyperedge %v has different state in CRDT %d", h, i)
+				t.Errorf("Hyperedge %v has different state in CRDT %d, %v", h, i, state)
 			}
 		}
 	}
