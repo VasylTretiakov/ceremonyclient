@@ -10,6 +10,8 @@ replace source.quilibrium.com/quilibrium/monorepo/bls48581 => ../bls48581
 
 replace source.quilibrium.com/quilibrium/monorepo/vdf => ../vdf
 
+replace source.quilibrium.com/quilibrium/monorepo/verenc => ../verenc
+
 replace github.com/multiformats/go-multiaddr => ../go-multiaddr
 
 replace github.com/multiformats/go-multiaddr-dns => ../go-multiaddr-dns
@@ -176,6 +178,7 @@ require (
 	source.quilibrium.com/quilibrium/monorepo/bls48581 v0.0.0-00010101000000-000000000000 // indirect
 	source.quilibrium.com/quilibrium/monorepo/nekryptology v0.0.0-00010101000000-000000000000 // indirect
 	source.quilibrium.com/quilibrium/monorepo/vdf v0.0.0-00010101000000-000000000000 // indirect
+	source.quilibrium.com/quilibrium/monorepo/verenc v0.0.0-00010101000000-000000000000 // indirect
 )
 
 require (
