@@ -236,6 +236,7 @@ func NewTokenExecutionEngine(
 		keyManager:            keyManager,
 		clockStore:            clockStore,
 		coinStore:             coinStore,
+		hypergraphStore:       hypergraphStore,
 		keyStore:              keyStore,
 		pubSub:                pubSub,
 		inclusionProver:       inclusionProver,
@@ -452,6 +453,10 @@ func (e *TokenExecutionEngine) rebuildHypergraph() {
 	for iter.First(); iter.Valid(); iter.Next() {
 		key := make([]byte, len(iter.Key()[2:]))
 		copy(key, iter.Key()[2:])
+		e.logger.Debug(
+			"encrypting coin",
+			zap.String("address", hex.EncodeToString(key)),
+		)
 		data := e.mpcithVerEnc.Encrypt(iter.Value(), config.GetGenesis().Beacon)
 		compressed := []hypergraph.Encrypted{}
 		for _, d := range data {
@@ -476,6 +481,10 @@ func (e *TokenExecutionEngine) rebuildHypergraph() {
 	for iter.First(); iter.Valid(); iter.Next() {
 		key := make([]byte, len(iter.Key()[2:]))
 		copy(key, iter.Key()[2:])
+		e.logger.Debug(
+			"encrypting pre-coin proof",
+			zap.String("address", hex.EncodeToString(key)),
+		)
 		data := e.mpcithVerEnc.Encrypt(iter.Value(), config.GetGenesis().Beacon)
 		compressed := []hypergraph.Encrypted{}
 		for _, d := range data {
@@ -492,14 +501,14 @@ func (e *TokenExecutionEngine) rebuildHypergraph() {
 		}
 	}
 	iter.Close()
-	e.logger.Info("saving rebuilt state tree")
+	e.logger.Info("saving rebuilt hypergraph")
 
 	txn, err := e.clockStore.NewTransaction(false)
 	if err != nil {
 		panic(err)
 	}
 
-	e.logger.Info("committing state tree")
+	e.logger.Info("committing hypergraph")
 
 	roots := e.hypergraph.Commit()
 
@@ -1179,7 +1188,7 @@ func (e *TokenExecutionEngine) ProcessFrame(
 		}
 	}
 
-	e.logger.Info("committing state tree")
+	e.logger.Info("committing hypergraph")
 
 	roots := hg.Commit()
 

@@ -373,7 +373,11 @@ func (set *IdSet) Add(atom Atom) error {
 }
 
 func (set *IdSet) GetSize() *big.Int {
-	return set.tree.GetSize()
+	size := set.tree.GetSize()
+	if size == nil {
+		size = big.NewInt(0)
+	}
+	return size
 }
 
 func (set *IdSet) Delete(atom Atom) bool {
@@ -407,7 +411,7 @@ type Hypergraph struct {
 
 func NewHypergraph() *Hypergraph {
 	return &Hypergraph{
-		size:             new(big.Int),
+		size:             big.NewInt(0),
 		vertexAdds:       make(map[ShardKey]*IdSet),
 		vertexRemoves:    make(map[ShardKey]*IdSet),
 		hyperedgeAdds:    make(map[ShardKey]*IdSet),
