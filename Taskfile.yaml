@@ -36,6 +36,7 @@ tasks:
     cmds:
       - vdf/generate.sh
       - bls48581/generate.sh
+      - verenc/generate.sh
       - node/build.sh -o build/arm64_macos/node
 
   build_qclient_arm64_macos:
