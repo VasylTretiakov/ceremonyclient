@@ -362,8 +362,8 @@ func NewTokenExecutionEngine(
 	e.proverPublicKey = publicKeyBytes
 	e.provingKeyAddress = provingKeyAddress
 
-	frame, _, err := e.clockStore.GetLatestDataClockFrame(e.intrinsicFilter)
-	if err != nil || frame.FrameNumber < 186405 {
+	_, _, err = e.clockStore.GetLatestDataClockFrame(e.intrinsicFilter)
+	if err != nil {
 		e.rebuildHypergraph()
 	} else {
 		e.hypergraph, err = e.hypergraphStore.LoadHypergraph()
