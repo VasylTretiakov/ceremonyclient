@@ -872,16 +872,22 @@ func CreateGenesisState(
 			if err != nil {
 				panic(err)
 			}
-			coinBytes, err := proto.Marshal(output.GetCoin())
-			if err != nil {
-				panic(err)
-			}
 
-			data := []byte{}
-			data = binary.BigEndian.AppendUint64(data, 0)
-			data = append(data, coinBytes...)
+			value := []byte{}
+			value = append(value, make([]byte, 8)...)
+			value = append(value, output.GetCoin().Amount...)
+			// implicit
+			value = append(value, 0x00)
+			value = append(
+				value,
+				output.GetCoin().Owner.GetImplicitAccount().GetAddress()...,
+			)
+			// domain len
+			value = append(value, 0x00)
+			value = append(value, output.GetCoin().Intersection...)
+
 			proofs := mpcithVerEnc.EncryptAndCompress(
-				data,
+				value,
 				config.GetGenesis().Beacon,
 			)
 			compressed := []hypergraph.Encrypted{}
