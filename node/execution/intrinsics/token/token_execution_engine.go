@@ -449,10 +449,14 @@ func (e *TokenExecutionEngine) addBatchToHypergraph(batchKey [][]byte, batchValu
 	throttle := make(chan struct{}, runtime.NumCPU())
 	batchCompressed := make([]hypergraph.Vertex, len(batchKey))
 	for i, chunk := range batchValue {
+		e.logger.Debug("acquiring throttle slot")
 		throttle <- struct{}{}
 		wg.Add(1)
 		go func(chunk []byte, i int) {
-			defer func() { <-throttle }()
+			defer func() {
+			    e.logger.Debug("releasing throttle slot")
+			    <-throttle
+			}()
 			defer wg.Done()
 			e.logger.Debug(
 				"encrypting coin",
@@ -470,17 +474,24 @@ func (e *TokenExecutionEngine) addBatchToHypergraph(batchKey [][]byte, batchValu
 				"encrypted coin",
 				zap.String("address", hex.EncodeToString(batchKey[i])),
 			)
+
+            e.logger.Debug("adding new vertex for batch key", zap.String("address", hex.EncodeToString(batchKey[i])))
 			batchCompressed[i] = hypergraph.NewVertex(
 				[32]byte(application.TOKEN_ADDRESS),
 				[32]byte(batchKey[i]),
 				compressed,
 			)
+
+			e.logger.Debug("preparing commit for batch key", zap.String("address", hex.EncodeToString(batchKey[i])))
 			batchCompressed[i].Commit()
+			e.logger.Debug("committed batch key", zap.String("address", hex.EncodeToString(batchKey[i])))
 		}(chunk, i)
 	}
+    e.logger.Debug("waiting for the workgroup to complete")
 	wg.Wait()
 
 	for i := range batchKey {
+	    e.logger.Debug("adding new vertex for batch compressed", zap.Int("batch compressed", i))
 		if err := e.hypergraph.AddVertex(
 			batchCompressed[i],
 		); err != nil {
@@ -497,7 +508,10 @@ func (e *TokenExecutionEngine) rebuildHypergraph() {
 		panic(err)
 	}
 	var batchKey, batchValue [][]byte
+	var iterCnt = 0
 	for iter.First(); iter.Valid(); iter.Next() {
+		iterCnt++
+		e.logger.Debug("starting iteration", zap.Int("iteration", iterCnt))
 		key := make([]byte, len(iter.Key()[2:]))
 		copy(key, iter.Key()[2:])
 		batchKey = append(batchKey, key)
@@ -523,6 +537,8 @@ func (e *TokenExecutionEngine) rebuildHypergraph() {
 			e.addBatchToHypergraph(batchKey, batchValue)
 			batchKey = [][]byte{}
 			batchValue = [][]byte{}
+		} else {
+		    e.logger.Debug("skipping batch to hypergraph", zap.Int("batch key length", len(batchKey)), zap.Int("cpu count", runtime.NumCPU()))
 		}
 	}
 	iter.Close()
