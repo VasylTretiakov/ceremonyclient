@@ -447,7 +447,7 @@ var _ execution.ExecutionEngine = (*TokenExecutionEngine)(nil)
 func (e *TokenExecutionEngine) addBatchToHypergraph(batchKey [][]byte, batchValue [][]byte) {
 	var wg sync.WaitGroup
 	throttle := make(chan struct{}, runtime.NumCPU())
-	batchCompressed := make([][]hypergraph.Encrypted, len(batchKey))
+	batchCompressed := make([]hypergraph.Vertex, len(batchKey))
 	for i, chunk := range batchValue {
 		throttle <- struct{}{}
 		wg.Add(1)
@@ -470,18 +470,19 @@ func (e *TokenExecutionEngine) addBatchToHypergraph(batchKey [][]byte, batchValu
 				"encrypted coin",
 				zap.String("address", hex.EncodeToString(batchKey[i])),
 			)
-			batchCompressed[i] = compressed
+			batchCompressed[i] = hypergraph.NewVertex(
+				[32]byte(application.TOKEN_ADDRESS),
+				[32]byte(batchKey[i]),
+				compressed,
+			)
+			batchCompressed[i].Commit()
 		}(chunk, i)
 	}
 	wg.Wait()
 
 	for i := range batchKey {
 		if err := e.hypergraph.AddVertex(
-			hypergraph.NewVertex(
-				[32]byte(application.TOKEN_ADDRESS),
-				[32]byte(batchKey[i]),
-				batchCompressed[i],
-			),
+			batchCompressed[i],
 		); err != nil {
 			panic(err)
 		}
